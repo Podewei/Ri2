@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physics C Mechanics Sword福利网</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, orderByChild, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHGlH4sWTuQPOBNWBBjIynGK-VoWjaBcg",
+      authDomain: "sword-fuliwang-49bfe.firebaseapp.com",
+      databaseURL: "https://sword-fuliwang-49bfe-default-rtdb.firebaseio.com/",
+      projectId: "sword-fuliwang-49bfe",
+      storageBucket: "sword-fuliwang-49bfe.firebasestorage.app",
+      messagingSenderId: "603694761148",
+      appId: "1:603694761148:web:f67688249dec58939b7cb9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    
+    window.firebaseDatabase = database;
+    window.firebaseRef = ref;
+    window.firebasePush = push;
+    window.firebaseSet = set;
+    window.firebaseOnValue = onValue;
+    window.firebaseOrderByChild = orderByChild;
+    window.firebaseServerTimestamp = serverTimestamp;
+    window.firebaseQuery = query;
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0a0a0a;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+      background-image: 
+        radial-gradient(circle at 25% 25%, rgba(0, 255, 204, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(255, 0, 102, 0.1) 0%, transparent 50%);
+    }
+    .container {
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+      position: relative;
+    }
+    
+    /* 高级光标系统 */
+    .cursor {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #00ffcc;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: 
+        transform 0.15s ease,
+        width 0.2s ease,
+        height 0.2s ease,
+        background 0.2s ease;
+      left: 0;
+      top: 0;
+    }
+
+    .cursor-inner {
+      width: 6px;
+      height: 6px;
+      background: #ff00aa;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 1001;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: transform 0.05s ease;
+      left: 0;
+      top: 0;
+    }
+
+    .cursor.hover {
+      transform: translate(-50%, -50%) scale(1.5);
+      background: rgba(0, 255, 204, 0.3);
+      border-color: #ff00aa;
+    }
+
+    .cursor.click {
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(255, 0, 170, 0.5);
+    }
+
+    /* 飞入效果 */
+    @keyframes flyIn1 {
+      0% {
+        left: -400px;
+        opacity: 1;
+        transform: translateY(-50%) scale(0.8);
+      }
+      60% {
+        left: 50%;
+        transform: translateY(-50%) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        left: 50%;
+        transform: translateY(-50%) scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes flyIn2 {
+      0% {
+        left: -400px;
+        opacity: 1;
+        transform: translateY(-50%) scale(0.8);
+      }
+      60% {
+        left: 50%;
+        transform: translateY(-50%) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        left: 50%;
+        transform: translateY(-50%) scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes flyIn3 {
+      0% {
+        right: -400px;
+        opacity: 1;
+        transform: translateY(-50%);
+      }
+      25% {
+        transform: translateY(-50%) rotate(90deg);
+      }
+      35% {
+        transform: translateY(-50%) rotate(180deg);
+      }
+      50% {
+        transform: translateY(-50%) rotate(270deg);
+      }
+      80% {
+        transform: translateY(-50%) rotate(360deg);
+        right: 50%;
+        opacity: 1;
+      }
+      100% {
+        left: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+      }
+    }
+
+    /* 设定每个图像不同的飞入时间 */
+    .flying-image1 {
+      width: 300px;
+      position: fixed;
+      top: 55%;
+      left: -400px;
+      transform: translateY(-50%);
+      opacity: 0;
+      animation: flyIn1 4s forwards ease-out;
+      z-index: 10;
+    }
+
+    .flying-image2 {
+      width: 300px;
+      position: fixed;
+      top: 80%;
+      right: -400px;
+      transform: translateY(-50%);
+      opacity: 0;
+      animation: flyIn2 6s forwards ease-out;
+      z-index: 10;
+    }
+
+    .flying-image3 {
+      width: 300px;
+      position: fixed;
+      top: 14%;
+      right: -400px;
+      transform: translateY(-50%);
+      opacity: 1;
+      animation: flyIn3 5s forwards ease-out;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 6rem;
+      font-size: 2.5rem;
+      color: #ff0000;
+      position: relative;
+      z-index: 2;
+    }
+    section {
+      margin-top: 4rem;
+      position: relative;
+      z-index: 2;
+      background: rgba(10, 20, 15, 0.7);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 255, 204, 0.2);
+    }
+    section h2 {
+      color: #00e6e6;
+      border-left: 5px solid #00ffcc;
+      padding-left: 1rem;
+      margin-bottom: 1rem;
+    }
+    section p {
+      margin-bottom: 1.2rem;
+      line-height: 1.8;
+    }
+    .glow {
+      text-shadow: 0 0 10px #ff0000, 0 0 20px #df1c1c, 0 0 30px #f75353;
+      animation: glowPulse 2s infinite alternate;
+    }
+    @keyframes glowPulse {
+      from {
+        text-shadow: 0 0 10px #ff0000, 0 0 20px #df1c1c, 0 0 30px #f75353;
+      }
+      to {
+        text-shadow: 0 0 15px #ff0000, 0 0 30px #df1c1c, 0 0 45px #f75353;
+      }
+    }
+    footer {
+      text-align: center;
+      margin: 5rem 0 2rem;
+      color: #888;
+      position: relative;
+      z-index: 2;
+    }
+    .highlight {
+      color: #ffff00;
+    }
+
+    /* 粒子效果 */
+    .particle {
+      position: fixed;
+      width: 5px;
+      height: 5px;
+      background: #00ffcc;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+    }
+
+    /* 评论区域样式 */
+    #comments {
+      margin-top: 3rem;
+      padding: 2rem;
+      background: rgba(0, 20, 15, 0.8);
+      border: 1px solid #00ffcc;
+      border-radius: 5px;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+      backdrop-filter: blur(5px);
+    }
+
+    #comment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    #comment-form input, 
+    #comment-form textarea {
+      padding: 0.8rem;
+      background: rgba(10, 20, 15, 0.8);
+      border: 1px solid #00ffcc;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      transition: all 0.3s;
+    }
+
+    #comment-form input:focus, 
+    #comment-form textarea:focus {
+      outline: none;
+      border-color: #ff00aa;
+      box-shadow: 0 0 10px rgba(255, 0, 170, 0.5);
+    }
+
+    #comment-form button {
+      padding: 0.8rem;
+      background: linear-gradient(to right, #00ffcc, #0088ff);
+      color: black;
+      border: none;
+      cursor: none;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #comment-form button:hover {
+      background: linear-gradient(to right, #00e6b8, #0077dd);
+      box-shadow: 0 0 10px #00ffcc;
+    }
+
+    #comment-form button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    #comment-form button:hover::before {
+      left: 100%;
+    }
+
+    .comment {
+      background: rgba(0, 15, 10, 0.7);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-left: 3px solid #00ffcc;
+      position: relative;
+      transition: all 0.3s;
+      animation: commentAppear 0.5s ease-out;
+      backdrop-filter: blur(3px);
+    }
+
+    .comment:hover {
+      background: rgba(0, 25, 20, 0.8);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .comment-author {
+      color: #00ffcc;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .comment-author::before {
+      content: "👤";
+      margin-right: 8px;
+    }
+
+    .comment-date {
+      color: #00aaff;
+      font-size: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .comment-text {
+      line-height: 1.6;
+      padding-left: 1rem;
+      border-left: 1px dashed #00ff99;
+    }
+
+    #comment-list {
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    /* 滚动条样式 */
+    #comment-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    #comment-list::-webkit-scrollbar-track {
+      background: rgba(0, 10, 5, 0.5);
+    }
+
+    #comment-list::-webkit-scrollbar-thumb {
+      background: #00ffcc;
+      border-radius: 3px;
+    }
+
+    @keyframes commentAppear {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 加载动画 */
+    .loading {
+      text-align: center;
+      padding: 1rem;
+      color: #00ffcc;
+    }
+
+    .loading:after {
+      content: "...";
+      animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% {
+        content: ".";
+      }
+      40% {
+        content: "..";
+      }
+      60%, 100% {
+        content: "...";
+      }
+    }
+
+    /* 背景动画元素 */
+    .bg-element {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.3;
+      z-index: 1;
+    }
+
+    .bg-element-1 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #00ffcc, transparent 70%);
+      top: 20%;
+      left: 10%;
+      animation: float 15s infinite alternate ease-in-out;
+    }
+
+    .bg-element-2 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #ff00aa, transparent 70%);
+      bottom: 10%;
+      right: 10%;
+      animation: float 20s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0, 0);
+      }
+      50% {
+        transform: translate(50px, 50px);
+      }
+      100% {
+        transform: translate(-50px, -50px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <img id="introImage" src="photo.jpg" class="flying-image1" alt="Flying Image" />
+  <img id="introImage" src="photo.jpg" class="flying-image2" alt="Flying Image" />
+  <img id="introImage" src="photo.jpg" class="flying-image3" alt="Flying Image" />
+  
+  <!-- 背景动画元素 -->
+  <div class="bg-element bg-element-1"></div>
+  <div class="bg-element bg-element-2"></div>
+  
+  <!-- 高级光标系统 -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-inner" id="cursor-inner"></div>
+  
+  <div class="container">
+    <h1 class="glow">Physics C: Mechanics Sword福利网</h1>
+    
+    <section>
+      <h2>Unit 1: Kinematics (运动学)</h2>
+      <p>运动学研究物体的运动而不考虑其受力情况，重点是描述位移、速度与加速度之间的关系。基本模型为匀变速直线运动，其中使用以下公式进行描述：</p>
+      <p>1. 速度-时间公式：v = v₀ + at</p>
+      <p>2. 位移-时间公式：x = v₀t + ½at²</p>
+      <p>3. 速度-位移公式：v² = v₀² + 2a(x - x₀)</p>
+      <p>4. 平均速度公式：v_avg = (v + v₀) / 2</p>
+      <p>此外，还涉及位移-时间图像（斜率为速度）、速度-时间图像（斜率为加速度，面积为位移）等几何分析方法。</p>
+    </section>
+
+    <section>
+      <h2>Unit 2: Newton's Laws of Motion (牛顿运动定律)</h2>
+      <p><strong>第一定律（惯性定律）：</strong>在无外力或合力为零的情况下，静止物体保持静止，运动物体保持匀速直线运动。</p>
+      <p><strong>第二定律：</strong>F = ma，表示合外力决定加速度的方向与大小。常用于系统受多力作用时的受力分析，特别是在斜面、滑轮、弹簧系统中。</p>
+      <p><strong>第三定律：</strong>作用力与反作用力大小相等、方向相反、作用在不同物体上。应用于相互作用的物体之间，例如两个物体接触时的支持力与压力。</p>
+      <p>重要技巧包括受力图绘制、方向设定一致性、系统整体与部分分析法。</p>
+    </section>
+
+    <section>
+      <h2>Unit 3: Work, Energy, and Power (功、能量与功率)</h2>
+      <p><strong>功的定义：</strong>W = Fd cosθ，其中θ是力与位移之间的夹角。若夹角为0度，则功为正；为90度，则功为零；为180度，则功为负。</p>
+      <p><strong>动能定理：</strong>合外力对物体做的总功等于物体动能的变化：W_net = ΔK = ½mv² - ½mv₀²。</p>
+      <p><strong>机械能守恒：</strong>若仅有保守力做功，则系统总机械能（动能+势能）守恒：E = K + U = 常量。</p>
+      <p><strong>功率：</strong>P = W/t 或 P = Fv，表示做功快慢，单位为瓦特（W）。</p>
+    </section>
+
+    <section>
+      <h2>Unit 4: Momentum and Collisions (动量与碰撞)</h2>
+      <p><strong>动量：</strong>p = mv，是描述物体惯性与速度结合的物理量。</p>
+      <p><strong>冲量：</strong>J = FΔt，是力在某段时间内的积累效果。冲量等于动量变化：J = Δp。</p>
+      <p><strong>动量守恒定律：</strong>若外力合力为零，系统总动量守恒：∑p_initial = ∑p_final。</p>
+      <p><strong>碰撞类型：</strong>
+        <ul>
+          <li>完全弹性碰撞：动量与机械能皆守恒。</li>
+          <li>非弹性碰撞：动量守恒，机械能部分转化为热能或形变能。</li>
+          <li>完全非弹性碰撞：两物体粘合，最终速度相同。</li>
+        </ul>
+      </p>
+    </section>
+
+    <section>
+      <h2>Unit 5: Rotation (转动运动)</h2>
+      <p>转动是角度上的运动。与直线运动类似，也有角位移θ、角速度ω、角加速度α等。</p>
+      <p><strong>转动惯量：</strong>I = ∑mr²，不同形状物体的 I 有不同表达式。I 越大，物体越难被加速旋转。</p>
+      <p><strong>角动量：</strong>L = Iω，是旋转系统的"动量"，守恒条件为无外力矩。</p>
+      <p><strong>力矩：</strong>τ = r × F，是旋转的原因，对应直线运动中的力。</p>
+      <p><strong>转动动能：</strong>K_rot = ½Iω²。总能量 = 平移能 + 转动能。</p>
+    </section>
+
+    <section>
+      <h2>Unit 6: Oscillations (简谐运动)</h2>
+      <p><strong>简谐运动：</strong>加速度与位移成正比、方向相反，典型表达式为：x(t) = A cos(ωt + φ)。</p>
+      <p><strong>周期与频率：</strong>弹簧振子周期 T = 2π√(m/k)，单摆周期 T = 2π√(L/g)。</p>
+      <p><strong>能量守恒：</strong>简谐系统中，动能与势能周期性互换，总机械能守恒。</p>
+    </section>
+
+    <section>
+      <h2>Unit 7: Gravitation (万有引力)</h2>
+      <p><strong>牛顿万有引力定律：</strong>F = Gm₁m₂/r²，G 为引力常数。作用范围从地球表面到行星轨道。</p>
+      <p><strong>轨道运动：</strong>卫星在圆轨道上的向心力由引力提供，可得 v = √(GM/r)，T² ∝ r³。</p>
+      <p><strong>势能：</strong>U = -GmM/r，负号表明是束缚势能。</p>
+      <p><strong>开普勒三大定律：</strong>
+        <ul>
+          <li>轨道为椭圆。</li>
+          <li>等面积定律：行星与太阳连线在相等时间扫过相等面积。</li>
+          <li>周期平方与半长轴立方成正比：T² ∝ a³。</li>
+        </ul>
+      </p>
+    </section>
+    
+    <!-- 评论区域 -->
+    <section id="comments">
+      <h2 style="border-left: 5px solid #fff700; color: #00ffcc;">Discussion Zone</h2>
+      <p>Share your thoughts or questions about Physics C Mechanics:</p>
+      
+      <form id="comment-form">
+        <input type="text" id="name" placeholder="Your Name (昵称)" required>
+        <textarea id="comment" placeholder="Your Comment (支持Markdown语法)" rows="4" required></textarea>
+        <button type="submit">POST COMMENT</button>
+      </form>
+      
+      <div id="comment-list">
+        <div class="loading">Loading comments</div>
+      </div>
+    </section>
+
+    <footer>
+      Created for AP Physics C | Designed with ❤️ by TheThreeSaobi
+    </footer>
+  </div>
+
+  <script>
+    // ==================== 高级光标系统 ====================
+    const cursor = document.getElementById("cursor");
+    const cursorInner = document.getElementById("cursor-inner");
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    // 跟踪鼠标位置（使用clientX/clientY不受滚动影响）
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      
+      // 立即更新内层光标位置（精确跟随）
+      cursorInner.style.left = mouseX + 'px';
+      cursorInner.style.top = mouseY + 'px';
+    });
+
+    // 添加悬停效果
+    const hoverElements = document.querySelectorAll('a, button, input, textarea, [data-hover]');
+    hoverElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.classList.add('hover');
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.classList.remove('hover');
+      });
+    });
+
+    // 添加点击效果
+    document.addEventListener('mousedown', () => {
+      cursor.classList.add('click');
+    });
+    document.addEventListener('mouseup', () => {
+      cursor.classList.remove('click');
+    });
+
+    // 光标动画 - 外层光标的平滑跟随效果
+    function animateCursor() {
+      // 计算与鼠标位置的差值
+      const dx = mouseX - cursorX;
+      const dy = mouseY - cursorY;
+      
+      // 使用缓动算法使跟随更平滑
+      cursorX += dx * 0.15;
+      cursorY += dy * 0.15;
+      
+      // 更新外层光标位置
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      
+      requestAnimationFrame(animateCursor);
+    }
+
+    // 初始化光标位置
+    window.addEventListener('load', () => {
+      // 设置初始位置为鼠标当前位置
+      cursor.style.left = mouseX + 'px';
+      cursor.style.top = mouseY + 'px';
+      cursorInner.style.left = mouseX + 'px';
+      cursorInner.style.top = mouseY + 'px';
+      
+      // 启动光标动画
+      animateCursor();
+    });
+
+    // ==================== 粒子效果 ====================
+    function createParticle(x, y) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = x + 'px';
+      particle.style.top = y + 'px';
+      document.body.appendChild(particle);
+      
+      // 随机大小和颜色
+      const size = Math.random() * 5 + 2;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      
+      const colors = ['#00ffcc', '#ff00aa', '#00aaff', '#ffff00'];
+      particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+      
+      // 动画
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 1 + Math.random() * 3;
+      const xVel = Math.cos(angle) * velocity;
+      const yVel = Math.sin(angle) * velocity;
+      
+      let opacity = 1;
+      let progress = 0;
+      
+      const animateParticle = () => {
+        progress += 0.02;
+        opacity = 1 - progress;
+        
+        particle.style.opacity = opacity;
+        particle.style.transform = `translate(${xVel * progress * 100}px, ${yVel * progress * 100}px)`;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateParticle);
+        } else {
+          particle.remove();
+        }
+      };
+      
+      requestAnimationFrame(animateParticle);
+    }
+
+    // 鼠标移动时创建粒子
+    let lastEmitTime = 0;
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastEmitTime > 50) { // 限制粒子创建频率
+        createParticle(e.clientX, e.clientY);
+        lastEmitTime = now;
+      }
+    });
+
+    // ==================== 飞入图片效果 ====================
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const introImgs = document.querySelectorAll('.flying-image1, .flying-image2, .flying-image3');
+        introImgs.forEach(img => {
+          img.style.transition = "opacity 1s ease-out";
+          img.style.opacity = "0";
+          setTimeout(() => img.style.display = "none", 1000);
+        });
+      }, 5000);
+    });
+
+    // ==================== 评论系统 ====================
+    // 评论表单提交
+    document.getElementById('comment-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value.trim();
+      const commentText = document.getElementById('comment').value.trim();
+      
+      if (name && commentText) {
+        postComment(name, commentText);
+        this.reset();
+        
+        // 添加发布成功的视觉效果
+        const button = this.querySelector('button');
+        button.textContent = 'Posted!';
+        setTimeout(() => {
+          button.textContent = 'POST COMMENT';
+        }, 2000);
+      } else {
+        alert('Please enter both name and comment!');
+      }
+    });
+
+    // 发布评论
+    function postComment(name, commentText) {
+      const commentsRef = window.firebaseRef(window.firebaseDatabase, 'comments');
+      const newCommentRef = window.firebasePush(commentsRef);
+      
+      window.firebaseSet(newCommentRef, {
+        name: name,
+        comment: commentText,
+        timestamp: window.firebaseServerTimestamp()
+      }).then(() => {
+        console.log("Comment posted successfully");
+      }).catch((error) => {
+        console.error("Error posting comment:", error);
+        alert('Error posting comment. Please try again.');
+      });
+    }
+
+    // 加载并显示评论
+    function loadComments() {
+      const commentsRef = window.firebaseRef(window.firebaseDatabase, 'comments');
+      const commentList = document.getElementById('comment-list');
+      
+      // 显示加载状态
+      commentList.innerHTML = '<div class="loading">Loading comments</div>';
+      
+      // 监听评论数据变化
+      window.firebaseOnValue(
+        window.firebaseQuery(
+          commentsRef, 
+          window.firebaseOrderByChild('timestamp')
+        ), 
+        (snapshot) => {
+          commentList.innerHTML = '';
+          
+          if (!snapshot.exists()) {
+            commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>';
+            return;
+          }
+          
+          // 将评论转为数组并按时间排序（最新的在前）
+          const comments = [];
+          snapshot.forEach(childSnapshot => {
+            comments.push({
+              id: childSnapshot.key,
+              ...childSnapshot.val()
+            });
+          });
+          
+          comments.sort((a, b) => b.timestamp - a.timestamp);
+          
+          // 显示每条评论
+          comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            commentElement.setAttribute('data-hover', 'true');
+            
+            const date = new Date(comment.timestamp);
+            const dateString = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            commentElement.innerHTML = `
+              <div class="comment-author">${comment.name || 'Anonymous'}</div>
+              <div class="comment-date">${dateString}</div>
+              <div class="comment-text">${comment.comment}</div>
+            `;
+            
+            commentList.appendChild(commentElement);
+          });
+        }, 
+        (error) => {
+          console.error("Error loading comments:", error);
+          commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">Error loading comments. Please refresh the page.</p>';
+        }
+      );
+    }
+
+    // 页面加载时加载评论
+    window.addEventListener('load', loadComments);
+  </script>
+</body>
+</html>
