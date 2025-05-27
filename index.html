@@ -7,31 +7,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue, orderByChild, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDHGlH4sWTuQPOBNWBBjIynGK-VoWjaBcg",
-      authDomain: "sword-fuliwang-49bfe.firebaseapp.com",
-      databaseURL: "https://sword-fuliwang-49bfe-default-rtdb.firebaseio.com/",
-      projectId: "sword-fuliwang-49bfe",
-      storageBucket: "sword-fuliwang-49bfe.firebasestorage.app",
-      messagingSenderId: "603694761148",
-      appId: "1:603694761148:web:f67688249dec58939b7cb9"
-    };
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDHGlH4sWTuQPOBNWBBjIynGK-VoWjaBcg",
+    authDomain: "sword-fuliwang-49bfe.firebaseapp.com",
+    projectId: "sword-fuliwang-49bfe",
+    storageBucket: "sword-fuliwang-49bfe.firebasestorage.app",
+    messagingSenderId: "603694761148",
+    appId: "1:603694761148:web:a71830678e9ad92f9b7cb9"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    
-    window.firebaseDatabase = database;
-    window.firebaseRef = ref;
-    window.firebasePush = push;
-    window.firebaseSet = set;
-    window.firebaseOnValue = onValue;
-    window.firebaseOrderByChild = orderByChild;
-    window.firebaseServerTimestamp = serverTimestamp;
-    window.firebaseQuery = query;
-  </script>
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
   <style>
     * {
       margin: 0;
