@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Physics C Mechanics Sword福利网</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDHGlH4sWTuQPOBNWBBjIynGK-VoWjaBcg",
-    authDomain: "sword-fuliwang-49bfe.firebaseapp.com",
-    projectId: "sword-fuliwang-49bfe",
-    storageBucket: "sword-fuliwang-49bfe.firebasestorage.app",
-    messagingSenderId: "603694761148",
-    appId: "1:603694761148:web:a71830678e9ad92f9b7cb9"
-  };
+  <!-- Firebase compat CDN（最关键！） -->
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-database-compat.js"></script>
+  <script>
+    // Web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHGlH4sWTuQPOBNWBBjIynGK-VoWjaBcg",
+      authDomain: "sword-fuliwang-49bfe.firebaseapp.com",
+      projectId: "sword-fuliwang-49bfe",
+      storageBucket: "sword-fuliwang-49bfe.appspot.com",
+      messagingSenderId: "603694761148",
+      appId: "1:603694761148:web:a71830678e9ad92f9b7cb9",
+      databaseURL: "https://sword-fuliwang-49bfe-default-rtdb.firebaseio.com/"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
@@ -547,21 +548,18 @@
       </p>
     </section>
     
-    <!-- 评论区域 -->
-    <section id="comments">
-      <h2 style="border-left: 5px solid #fff700; color: #00ffcc;">Discussion Zone</h2>
-      <p>Share your thoughts or questions about Physics C Mechanics:</p>
-      
-      <form id="comment-form">
-        <input type="text" id="name" placeholder="Your Name (昵称)" required>
-        <textarea id="comment" placeholder="Your Comment (支持Markdown语法)" rows="4" required></textarea>
-        <button type="submit">POST COMMENT</button>
-      </form>
-      
-      <div id="comment-list">
-        <div class="loading">Loading comments</div>
-      </div>
-    </section>
+  <section id="comments">
+    <h2 style="border-left: 5px solid #fff700; color: #00ffcc;">Discussion Zone</h2>
+    <p>Share your thoughts or questions about Physics C Mechanics:</p>
+    <form id="comment-form">
+      <input type="text" id="name" placeholder="Your Name (昵称)" required>
+      <textarea id="comment" placeholder="Your Comment (支持Markdown语法)" rows="4" required></textarea>
+      <button type="submit">POST COMMENT</button>
+    </form>
+    <div id="comment-list">
+      <div class="loading">Loading comments</div>
+    </div>
+  </section>
 
     <footer>
       Created for AP Physics C | Designed with ❤️ by TheThreeSaobi
@@ -697,19 +695,16 @@
       }, 5000);
     });
 
+
     // ==================== 评论系统 ====================
-    // 评论表单提交
     document.getElementById('comment-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      
       const name = document.getElementById('name').value.trim();
       const commentText = document.getElementById('comment').value.trim();
-      
       if (name && commentText) {
         postComment(name, commentText);
         this.reset();
-        
-        // 添加发布成功的视觉效果
+        // 按钮视觉效果
         const button = this.querySelector('button');
         button.textContent = 'Posted!';
         setTimeout(() => {
@@ -720,15 +715,13 @@
       }
     });
 
-    // 发布评论
     function postComment(name, commentText) {
-      const commentsRef = window.firebaseRef(window.firebaseDatabase, 'comments');
-      const newCommentRef = window.firebasePush(commentsRef);
-      
-      window.firebaseSet(newCommentRef, {
+      const commentsRef = firebase.database().ref('comments');
+      const newCommentRef = commentsRef.push();
+      newCommentRef.set({
         name: name,
         comment: commentText,
-        timestamp: window.firebaseServerTimestamp()
+        timestamp: Date.now()
       }).then(() => {
         console.log("Comment posted successfully");
       }).catch((error) => {
@@ -737,65 +730,42 @@
       });
     }
 
-    // 加载并显示评论
     function loadComments() {
-      const commentsRef = window.firebaseRef(window.firebaseDatabase, 'comments');
+      const commentsRef = firebase.database().ref('comments').orderByChild('timestamp');
       const commentList = document.getElementById('comment-list');
-      
-      // 显示加载状态
       commentList.innerHTML = '<div class="loading">Loading comments</div>';
-      
-      // 监听评论数据变化
-      window.firebaseOnValue(
-        window.firebaseQuery(
-          commentsRef, 
-          window.firebaseOrderByChild('timestamp')
-        ), 
-        (snapshot) => {
-          commentList.innerHTML = '';
-          
-          if (!snapshot.exists()) {
-            commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>';
-            return;
-          }
-          
-          // 将评论转为数组并按时间排序（最新的在前）
-          const comments = [];
-          snapshot.forEach(childSnapshot => {
-            comments.push({
-              id: childSnapshot.key,
-              ...childSnapshot.val()
-            });
-          });
-          
-          comments.sort((a, b) => b.timestamp - a.timestamp);
-          
-          // 显示每条评论
-          comments.forEach(comment => {
-            const commentElement = document.createElement('div');
-            commentElement.className = 'comment';
-            commentElement.setAttribute('data-hover', 'true');
-            
-            const date = new Date(comment.timestamp);
-            const dateString = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-            
-            commentElement.innerHTML = `
-              <div class="comment-author">${comment.name || 'Anonymous'}</div>
-              <div class="comment-date">${dateString}</div>
-              <div class="comment-text">${comment.comment}</div>
-            `;
-            
-            commentList.appendChild(commentElement);
-          });
-        }, 
-        (error) => {
-          console.error("Error loading comments:", error);
-          commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">Error loading comments. Please refresh the page.</p>';
+      commentsRef.on('value', (snapshot) => {
+        commentList.innerHTML = '';
+        if (!snapshot.exists()) {
+          commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>';
+          return;
         }
-      );
+        const comments = [];
+        snapshot.forEach(childSnapshot => {
+          comments.push({
+            id: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        comments.sort((a, b) => b.timestamp - a.timestamp);
+        comments.forEach(comment => {
+          const commentElement = document.createElement('div');
+          commentElement.className = 'comment';
+          commentElement.setAttribute('data-hover', 'true');
+          const date = new Date(comment.timestamp);
+          const dateString = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+          commentElement.innerHTML = `
+            <div class="comment-author">${comment.name || 'Anonymous'}</div>
+            <div class="comment-date">${dateString}</div>
+            <div class="comment-text">${comment.comment}</div>
+          `;
+          commentList.appendChild(commentElement);
+        });
+      }, (error) => {
+        console.error("Error loading comments:", error);
+        commentList.innerHTML = '<p style="text-align: center; padding: 2rem;">Error loading comments. Please refresh the page.</p>';
+      });
     }
-
-    // 页面加载时加载评论
     window.addEventListener('load', loadComments);
   </script>
 </body>
